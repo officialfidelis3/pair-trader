@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pair Trading Bot Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Pair Trading Bot Dashboard</h2>
+    <p><strong>Pair:</strong> <span id="pair"></span></p>
+    <p><strong>Z-Score:</strong> <span id="zscore"></span></p>
+    <p><strong>Last Trade:</strong> <span id="last_trade"></span></p>
+    <p><strong>Last Update:</strong> <span id="timestamp"></span></p>
+    <canvas id="zChart" width="600" height="200"></canvas>
+
+    <script>
+        const zData = [];
+        const labels = [];
+        const chartCtx = document.getElementById('zChart').getContext('2d');
+        const zChart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Z-Score',
+                    data: zData,
+                    borderColor: 'blue',
+                    borderWidth: 1,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: { display: true },
+                    y: { beginAtZero: false }
+                }
+            }
+        });
+
+        async function fetchData() {
+            const res = await fetch('/data');
+            const data = await res.json();
+
+            document.getElementById('pair').textContent = data.symbol_a + " & " + data.symbol_b;
+            document.getElementById('zscore').textContent = data.zscore;
+            document.getElementById('last_trade').textContent = data.last_trade;
+            document.getElementById('timestamp').textContent = data.timestamp;
+
+            if (!labels.includes(data.timestamp)) {
+                labels.push(data.timestamp);
+                zData.push(data.zscore);
+                zChart.update();
+            }
+        }
+
+        setInterval(fetchData, 5000);
+        fetchData();
+    </script>
+</body>
+</html>
