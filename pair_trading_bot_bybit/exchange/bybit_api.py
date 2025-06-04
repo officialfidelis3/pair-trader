@@ -1,20 +1,28 @@
-import ccxt
-import time
 import os
+from pybit.unified_trading import HTTP
 
 class BybitAPI:
     def __init__(self):
-        self.exchange = ccxt.bybit({
-            'apiKey': os.getenv('BYBIT_API_KEY', 'YOUR_API_KEY'),
-            'secret': os.getenv('BYBIT_SECRET', 'YOUR_SECRET'),
-            'enableRateLimit': True
-        })
+        self.session = HTTP(
+            api_key=os.getenv("BYBIT_API_KEY"),
+            api_secret=os.getenv("BYBIT_SECRET"),
+            testnet=False
+        )
 
-    def fetch_ohlcv(self, symbol, timeframe='1m', limit=100):
-        return self.exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+    def fetch_ohlcv(self, symbol, interval='1', limit=100):
+        response = self.session.get_kline(
+            category="linear",
+            symbol=symbol.replace('/', ''),
+            interval=interval,
+            limit=limit
+        )
+        return response['result']['list'][::-1]
 
-    def create_order(self, symbol, side, amount):
-        if side == 'buy':
-            return self.exchange.create_market_buy_order(symbol, amount)
-        elif side == 'sell':
-            return self.exchange.create_market_sell_order(symbol, amount)
+    def create_order(self, symbol, side, qty):
+        self.session.place_order(
+            category="linear",
+            symbol=symbol.replace('/', ''),
+            side=side.upper(),
+            order_type="Market",
+            qty=qty
+        )
