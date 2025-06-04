@@ -3,3 +3,5 @@ numpy
 pandas
 statsmodels
 pybit
+gunicorn
+ccxt
